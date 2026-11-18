@@ -1,4 +1,4 @@
-package ir.maniimani.geekmusic;
+package ir.maniimani.driveplay;
 
 import android.Manifest;
 import android.app.Activity;
@@ -41,7 +41,7 @@ import android.widget.TextView;
 import java.util.List;
 
 /**
- * GeekMusic — pure-black music player for the car head unit (USB / SD card).
+ * DrivePlay — pure-black music player for the car head unit (USB / SD card).
  * One screen: now playing, with the library sliding in over it.
  */
 public class MainActivity extends Activity implements PlayerService.Listener, LibraryPanel.Host, Library.Listener {
@@ -227,7 +227,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
                     svc.play();
                     return true;
                 case KeyEvent.KEYCODE_MEDIA_PAUSE:
-                    svc.pause();
+                    svc.pauseSoft();
                     return true;
                 case KeyEvent.KEYCODE_MEDIA_FAST_FORWARD:
                     svc.seekBy(10_000);

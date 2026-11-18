@@ -1,4 +1,4 @@
-package ir.maniimani.geekmusic;
+package ir.maniimani.driveplay;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;

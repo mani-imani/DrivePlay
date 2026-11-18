@@ -7,10 +7,10 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
     <application
-        android:label="GeekMusic"
+        android:label="DrivePlay"
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
-        android:theme="@style/Theme.GeekMusic"
+        android:theme="@style/Theme.DrivePlay"
         android:supportsRtl="true"
         android:requestLegacyExternalStorage="true">
 
@@ -31,11 +31,16 @@
             android:name=".PlayerService"
             android:exported="false" />
 
+        <!-- ignition off/on: the vendor wake-up broadcasts reach even force-stopped apps -->
         <receiver
-            android:name=".AutoResumeReceiver"
+            android:name=".SleepReceiver"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.car.action.ENTER_SLEEP" />
+                <action android:name="android.car.action.EXIT_SLEEP" />
+                <action android:name="android.car.action.CAR_BOOT_COMPLETED" />
+                <action android:name="android.car.action.CAR_APP_INIT_COMPLETED" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.MEDIA_MOUNTED" />

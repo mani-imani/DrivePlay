@@ -1,4 +1,4 @@
-package ir.maniimani.geekmusic;
+package ir.maniimani.driveplay;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -54,10 +54,10 @@ public class PlayerService extends Service {
     }
 
     static final int REPEAT_OFF = 0, REPEAT_ALL = 1, REPEAT_ONE = 2;
-    static final String ACTION_RESUME_IF_WAS_PLAYING = "ir.maniimani.geekmusic.RESUME";
-    private static final String ACTION_TOGGLE = "ir.maniimani.geekmusic.TOGGLE";
-    private static final String ACTION_NEXT = "ir.maniimani.geekmusic.NEXT";
-    private static final String ACTION_PREV = "ir.maniimani.geekmusic.PREV";
+    static final String ACTION_RESUME_IF_WAS_PLAYING = "ir.maniimani.driveplay.RESUME";
+    private static final String ACTION_TOGGLE = "ir.maniimani.driveplay.TOGGLE";
+    private static final String ACTION_NEXT = "ir.maniimani.driveplay.NEXT";
+    private static final String ACTION_PREV = "ir.maniimani.driveplay.PREV";
     private static final String CHANNEL = "playback";
     private static final int NOTIF_ID = 1;
 
@@ -141,13 +141,9 @@ public class PlayerService extends Service {
             foreground = true;
             Library lib = Library.get(this);
             if (!lib.scannedOnce() && !lib.isScanning()) lib.scanAsync();
-            resumeIfWasPlaying();
-            main.postDelayed(() -> {
-                if (!isPlaying() && foreground) {
-                    stopForeground(true);
-                    foreground = false;
-                }
-            }, 4000);
+            resumeTries = 0;
+            main.removeCallbacks(resumeRetry);
+            main.post(resumeRetry);
         }
         if (!isPlaying() && !foreground) stopSelfSoon();
         return START_NOT_STICKY;
@@ -261,6 +257,7 @@ public class PlayerService extends Service {
 
     void play() {
         if (current() == null) return;
+        markIntent(true);
         if (mp == null || (!prepared && !playWhenReady)) {
             load(true, (int) Math.max(0, position()));
             return;
@@ -275,7 +272,28 @@ public class PlayerService extends Service {
         changed(false);
     }
 
+    /** Pause asked for by the driver (on-screen button, notification): don't auto-resume later. */
     void pause() {
+        markIntent(false);
+        pauseInternal();
+    }
+
+    /**
+     * Pause that may come from the head unit itself (media key, another app taking the audio,
+     * the car switching off). Remember when, so a car that's switched off right after can
+     * still carry on from here when it's switched back on.
+     */
+    void pauseSoft() {
+        boolean was = isPlaying() || playWhenReady;
+        pauseInternal();
+        if (was) prefs.edit().putLong("lossAt", System.currentTimeMillis()).apply();
+    }
+
+    private void markIntent(boolean play) {
+        prefs.edit().putBoolean("intent", play).putLong("lossAt", 0).putBoolean(SleepReceiver.KEY_RESUME, false).apply();
+    }
+
+    private void pauseInternal() {
         playWhenReady = false;
         if (mp != null && prepared && mp.isPlaying()) mp.pause();
         resumeOnFocus = false;
@@ -575,13 +593,13 @@ public class PlayerService extends Service {
             case AudioManager.AUDIOFOCUS_LOSS_TRANSIENT:
                 // e.g. a phone call or navigation prompt: pause, then continue
                 if (isPlaying()) {
-                    pause();
+                    pauseSoft();
                     resumeOnFocus = true;
                 }
                 break;
             case AudioManager.AUDIOFOCUS_LOSS:
                 hasFocus = false;
-                if (isPlaying()) pause();
+                if (isPlaying()) pauseSoft();
                 resumeOnFocus = false;
                 break;
         }
@@ -590,7 +608,7 @@ public class PlayerService extends Service {
     // ================================================================== media session
 
     private void setupSession() {
-        session = new MediaSession(this, "GeekMusic");
+        session = new MediaSession(this, "DrivePlay");
         session.setCallback(new MediaSession.Callback() {
             @Override
             public void onPlay() {
@@ -599,7 +617,7 @@ public class PlayerService extends Service {
 
             @Override
             public void onPause() {
-                pause();
+                pauseSoft();
             }
 
             @Override
@@ -619,7 +637,7 @@ public class PlayerService extends Service {
 
             @Override
             public void onStop() {
-                pause();
+                pauseSoft();
             }
 
             @Override
@@ -714,7 +732,7 @@ public class PlayerService extends Service {
     private Notification placeholderNotification() {
         return new Notification.Builder(this, CHANNEL)
                 .setSmallIcon(R.drawable.ic_note)
-                .setContentTitle("GeekMusic")
+                .setContentTitle("DrivePlay")
                 .setShowWhen(false)
                 .build();
     }
@@ -820,12 +838,43 @@ public class PlayerService extends Service {
         }
     }
 
-    /** Called after boot / USB mount: continue the last song if music was playing when the car turned off. */
-    void resumeIfWasPlaying() {
+    private int resumeTries;
+
+    /**
+     * After the car wakes up the USB stick / SD card is mounted a few seconds later, so keep
+     * checking for the last song once a second for up to 45 s.
+     */
+    private final Runnable resumeRetry = new Runnable() {
+        @Override
+        public void run() {
+            int r = resumeIfWasPlaying();
+            if (r == RESUME_WAIT && ++resumeTries < 45) {
+                main.postDelayed(this, 1000);
+                return;
+            }
+            prefs.edit().putBoolean(SleepReceiver.KEY_RESUME, false).apply();
+            if (r != RESUME_STARTED && !isPlaying() && foreground) {
+                stopForeground(true);
+                foreground = false;
+                stopSelfSoon();
+            }
+        }
+    };
+
+    private static final int RESUME_NO = 0, RESUME_WAIT = 1, RESUME_STARTED = 2;
+
+    /** Continue the last song if music was playing when the car turned off. */
+    int resumeIfWasPlaying() {
+        if (isPlaying()) return RESUME_STARTED;
+        boolean want = prefs.getBoolean("wasPlaying", false) || prefs.getBoolean(SleepReceiver.KEY_RESUME, false);
+        if (!want) return RESUME_NO;
+        if (queue.isEmpty()) restoreState();
         Track t = current();
-        if (t == null || isPlaying() || !prefs.getBoolean("wasPlaying", false)) return;
-        if (!new File(t.path).canRead()) return;
+        if (t == null) return RESUME_NO;
+        if (!new File(t.path).canRead()) return RESUME_WAIT;
+        markIntent(true);
         load(true, (int) Math.max(0, prefs.getLong("position", 0)));
+        return RESUME_STARTED;
     }
 
     /** Restore the paused player for the UI (no autoplay). */

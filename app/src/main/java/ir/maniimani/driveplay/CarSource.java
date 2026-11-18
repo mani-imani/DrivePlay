@@ -1,4 +1,4 @@
-package ir.maniimani.geekmusic;
+package ir.maniimani.driveplay;
 
 import android.os.Bundle;
 import android.os.IBinder;
@@ -43,7 +43,7 @@ final class CarSource {
             if (source != 0 && source != SOURCE_EMPTY) {
                 Bundle b = new Bundle();
                 b.putInt("app_id", SOURCE_EMPTY);
-                b.putString("reason", "GeekMusic");
+                b.putString("reason", "DrivePlay");
                 sync("request.app.enter_app", b);
             }
         } catch (Throwable ignored) {

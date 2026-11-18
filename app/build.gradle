@@ -3,15 +3,15 @@ plugins {
 }
 
 android {
-    namespace 'ir.maniimani.geekmusic'
+    namespace 'ir.maniimani.driveplay'
     compileSdk 34
 
     defaultConfig {
-        applicationId 'ir.maniimani.geekmusic'
+        applicationId 'ir.maniimani.driveplay'
         minSdk 26
         targetSdk 28          // Android 9 — same as the head unit
-        versionCode 3
-        versionName '1.2.0'
+        versionCode 4
+        versionName '2.0.0'
     }
 
     // A fixed key committed to the repo, so every build (local or CI) is signed the
@@ -19,9 +19,9 @@ android {
     // sideloaded app, not a Play Store release key.
     signingConfigs {
         shared {
-            storeFile file('geekmusic.keystore')
+            storeFile file('driveplay.keystore')
             storePassword 'android'
-            keyAlias 'geekmusic'
+            keyAlias 'driveplay'
             keyPassword 'android'
         }
     }

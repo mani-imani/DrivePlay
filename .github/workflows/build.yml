@@ -28,12 +28,12 @@ jobs:
         run: gradle assembleRelease --no-daemon
 
       - name: Collect APK
-        run: cp app/build/outputs/apk/release/app-release.apk GeekMusic.apk
+        run: cp app/build/outputs/apk/release/app-release.apk DrivePlay.apk
 
       - uses: actions/upload-artifact@v4
         with:
-          name: GeekMusic
-          path: GeekMusic.apk
+          name: DrivePlay
+          path: DrivePlay.apk
 
       # A new versionName in app/build.gradle = a new release (tag is created automatically)
       - name: Publish GitHub release
@@ -48,5 +48,5 @@ jobs:
             exit 0
           fi
           NOTES=$(awk -v v="## ${VERSION}" '$0 == v {f=1; next} /^## / && f {exit} f' CHANGELOG.md)
-          gh release create "$TAG" GeekMusic.apk --target "$GITHUB_SHA" \
-            -t "GeekMusic ${TAG}" -n "${NOTES:-Release ${TAG}}"
+          gh release create "$TAG" DrivePlay.apk --target "$GITHUB_SHA" \
+            -t "DrivePlay ${TAG}" -n "${NOTES:-Release ${TAG}}"
