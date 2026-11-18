@@ -492,9 +492,9 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         LinearLayout.LayoutParams tl = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         tl.leftMargin = dp(9);
         timeRow.addView(tElapsed, tl);
-        timeRow.addView(back10, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        timeRow.addView(back10, pill(0));
         timeRow.addView(new View(this), new LinearLayout.LayoutParams(0, 1, 1f));
-        timeRow.addView(fwd10, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        timeRow.addView(fwd10, pill(0));
         LinearLayout.LayoutParams tr = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
         tr.rightMargin = dp(9);
         timeRow.addView(tTotal, tr);
@@ -567,6 +567,16 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         int pad = landscape ? dp(28) : dp(22);
         content.setPadding(pad, pad, pad, pad);
         content.setOrientation(landscape ? LinearLayout.HORIZONTAL : LinearLayout.VERTICAL);
+        // Landscape: controls on the left (driver's side in a left-hand-drive car), cover on the right.
+        // Portrait: cover on top.
+        content.removeAllViews();
+        if (landscape) {
+            content.addView(info);
+            content.addView(art);
+        } else {
+            content.addView(art);
+            content.addView(info);
+        }
 
         int artSize = landscape ? (int) Math.min(h - 2f * pad, w * 0.42f) : (int) Math.min(w - 2f * pad, h * 0.38f);
         artSize = Math.max(artSize, dp(120));
@@ -575,7 +585,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         LinearLayout.LayoutParams ilp;
         if (landscape) {
             ilp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-            ilp.leftMargin = dp(32);
+            ilp.rightMargin = dp(32);
         } else {
             ilp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
             ilp.topMargin = dp(20);
@@ -583,7 +593,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         info.setLayoutParams(ilp);
 
         applyScale(1f);
-        int infoW = landscape ? (w - 2 * pad - artSize - ilp.leftMargin) : (w - 2 * pad);
+        int infoW = landscape ? (w - 2 * pad - artSize - ilp.rightMargin) : (w - 2 * pad);
         int availH = landscape ? (h - 2 * pad) : (h - 2 * pad - artSize - ilp.topMargin);
         info.measure(View.MeasureSpec.makeMeasureSpec(Math.max(1, infoW), View.MeasureSpec.EXACTLY),
                 View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
@@ -619,8 +629,11 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
 
         sizeIcon(btnLibrary, 44 * k, 24 * k, 0);
         sizeIcon(btnMoon, 44 * k, 22 * k, 0);
-        size(back10, dp(42 * k), dp(42 * k));
-        size(fwd10, dp(42 * k), dp(42 * k));
+        size(back10, dp(64 * k), dp(30 * k));
+        size(fwd10, dp(64 * k), dp(30 * k));
+        ((LinearLayout.LayoutParams) back10.getLayoutParams()).leftMargin = dp(12 * k);
+        ((LinearLayout.LayoutParams) fwd10.getLayoutParams()).rightMargin = dp(12 * k);
+        topMargin(timeRow, dp(4 * k));
         sizeIcon(btnShuffle, 46 * k, 22 * k, 0);
         sizeIcon(btnPrev, 64 * k, 32 * k, 14 * k);
         LinearLayout.LayoutParams plp = (LinearLayout.LayoutParams) btnPlay.getLayoutParams();
@@ -756,6 +769,10 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         lp.gravity = Gravity.CENTER_HORIZONTAL;
         lp.topMargin = top;
         return lp;
+    }
+
+    private LinearLayout.LayoutParams pill(int unused) {
+        return new LinearLayout.LayoutParams(dp(64), dp(30));
     }
 
     private LinearLayout.LayoutParams sq(int sizeDp, int leftMarginDp) {
