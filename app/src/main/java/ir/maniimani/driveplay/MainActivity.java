@@ -45,6 +45,9 @@ import java.util.List;
  * One screen: now playing, with the library sliding in over it.
  */
 public class MainActivity extends Activity implements PlayerService.Listener, LibraryPanel.Host, Library.Listener {
+    /** True while the player is on screen. */
+    static volatile boolean sVisible;
+
 
     // night-first palette (shared with LibraryPanel)
     static final int C_TEXT = Color.rgb(236, 236, 238);
@@ -132,6 +135,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
     @Override
     protected void onResume() {
         super.onResume();
+        sVisible = true;
         chrome.start();
         lib.addListener(this);
         main.post(tick);
@@ -141,6 +145,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
 
     @Override
     protected void onPause() {
+        sVisible = false;
         lib.removeListener(this);
         main.removeCallbacks(tick);
         chrome.stop();

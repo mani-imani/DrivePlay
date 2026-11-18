@@ -10,8 +10,8 @@ android {
         applicationId 'ir.maniimani.driveplay'
         minSdk 26
         targetSdk 28          // Android 9 — same as the head unit
-        versionCode 4
-        versionName '2.0.0'
+        versionCode 5
+        versionName '2.1.0'
     }
 
     // A fixed key committed to the repo, so every build (local or CI) is signed the

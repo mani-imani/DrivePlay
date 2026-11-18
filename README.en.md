@@ -70,7 +70,7 @@ Playback and the library use only standard Android APIs and work on any Android 
 When the car is switched off, the head unit goes to sleep and force-stops every user-installed app. A force-stopped app doesn't receive regular Android broadcasts such as boot completed or media mounted. But the vendor system sends its own broadcasts before sleeping and after waking (`android.car.action.ENTER_SLEEP`, `EXIT_SLEEP`, `CAR_BOOT_COMPLETED`), and those also reach stopped apps:
 
 - **Before sleep:** DrivePlay notes whether music was playing. A pause the head unit itself caused in the last moments still counts as playing; a pause you pressed yourself doesn't.
-- **After wake-up:** if music was playing, DrivePlay waits up to 45 s for the USB stick or SD card to be mounted again, then continues from the same second.
+- **After wake-up:** if music was playing, DrivePlay waits up to 45 s for the USB stick or SD card to be mounted again, then continues from the same second and brings the player to the screen.
 
 **It's safe for the car.** These broadcasts are sent by the head unit's own system to every app; DrivePlay only listens. It sends no commands to the car and does nothing in the background while the unit sleeps.
 

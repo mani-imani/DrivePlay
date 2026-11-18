@@ -853,7 +853,15 @@ public class PlayerService extends Service {
                 return;
             }
             prefs.edit().putBoolean(SleepReceiver.KEY_RESUME, false).apply();
-            if (r != RESUME_STARTED && !isPlaying() && foreground) {
+            if (r == RESUME_STARTED) {
+                // bring the player to the screen; once more a little later, in case the
+                // head unit puts its home screen on top while it finishes waking up
+                showPlayer();
+                main.postDelayed(() -> {
+                    if (isPlaying() && !MainActivity.sVisible) showPlayer();
+                }, 4000);
+            }
+            if (r != RESUME_STARTED && r != RESUME_ALREADY && !isPlaying() && foreground) {
                 stopForeground(true);
                 foreground = false;
                 stopSelfSoon();
@@ -861,11 +869,20 @@ public class PlayerService extends Service {
         }
     };
 
-    private static final int RESUME_NO = 0, RESUME_WAIT = 1, RESUME_STARTED = 2;
+    private static final int RESUME_NO = 0, RESUME_WAIT = 1, RESUME_STARTED = 2, RESUME_ALREADY = 3;
+
+    private void showPlayer() {
+        if (MainActivity.sVisible) return;
+        try {
+            startActivity(new Intent(this, MainActivity.class)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_REORDER_TO_FRONT));
+        } catch (Throwable ignored) {
+        }
+    }
 
     /** Continue the last song if music was playing when the car turned off. */
     int resumeIfWasPlaying() {
-        if (isPlaying()) return RESUME_STARTED;
+        if (isPlaying()) return RESUME_ALREADY;
         boolean want = prefs.getBoolean("wasPlaying", false) || prefs.getBoolean(SleepReceiver.KEY_RESUME, false);
         if (!want) return RESUME_NO;
         if (queue.isEmpty()) restoreState();
