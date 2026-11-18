@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.2.0
+- تمام‌صفحه: نوار بالای مانیتور پنهان می‌شه و با کشیدن یا لمس لبه‌ی بالای صفحه چند ثانیه نمایش داده می‌شه (Full-screen: the head unit's top bar hides; swipe or tap the top edge to show it briefly)
+- ساعت بالای کاور (Clock above the cover)
+
 ## 1.1.0
 - کاور رفت سمت راست و دکمه‌ها اومدن سمت راننده (Cover moved to the right; controls on the driver's side)
 - طراحی جدید دکمه‌های ۱۰ ثانیه جلو و عقب (Redesigned ±10 s buttons)

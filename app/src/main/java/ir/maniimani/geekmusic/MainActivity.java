@@ -74,6 +74,8 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
     private PlayButton btnPlay;
     private View dimOverlay;
     private LibraryPanel library;
+    private Chrome chrome;
+    private TextView clock;
     private boolean libraryOpen;
 
     private Art.Palette palette = Art.NEUTRAL;
@@ -130,6 +132,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
     @Override
     protected void onResume() {
         super.onResume();
+        chrome.start();
         lib.addListener(this);
         main.post(tick);
         if (svc != null) applyAll(false);
@@ -140,6 +143,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
     protected void onPause() {
         lib.removeListener(this);
         main.removeCallbacks(tick);
+        chrome.stop();
         super.onPause();
     }
 
@@ -188,6 +192,12 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
             main.postDelayed(this, 250);
         }
     };
+
+    @Override
+    public void onWindowFocusChanged(boolean hasFocus) {
+        super.onWindowFocusChanged(hasFocus);
+        if (hasFocus) chrome.hide();
+    }
 
     @Override
     public void onBackPressed() {
@@ -408,6 +418,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
     private void buildUi() {
         root = new FrameLayout(this);
         root.setLayoutDirection(View.LAYOUT_DIRECTION_LTR);
+        chrome = new Chrome(this);
         root.setBackgroundColor(Color.BLACK);
 
         glow = new GlowView(this);
@@ -539,6 +550,9 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         controls.addView(btnRepeat, sq(46, 14));
         info.addView(controls, wrapCentered(dp(6)));
 
+        clock = chrome.createClock(fBold, 20, C_TEXT_2);
+        root.addView(clock, new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+
         // library slides in over everything
         library = new LibraryPanel(this, this, fRegular, fMedium, fBold);
         library.setVisibility(View.INVISIBLE);
@@ -550,6 +564,9 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
         dimOverlay.setClickable(false);
         dimOverlay.setFocusable(false);
         root.addView(dimOverlay, match());
+
+        // tap along the very top edge to bring the head unit's bar back for a moment
+        chrome.addTopStrip(root, dp(12));
 
         root.addOnLayoutChangeListener((v, l, t, r, b, ol, ot, or, ob) -> {
             int w = r - l, h = b - t;
@@ -578,7 +595,9 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
             content.addView(info);
         }
 
-        int artSize = landscape ? (int) Math.min(h - 2f * pad, w * 0.42f) : (int) Math.min(w - 2f * pad, h * 0.38f);
+        int clockSpace = dp(44); // room for the clock above the cover
+        int artSize = landscape ? (int) Math.min(h - 2f * pad - clockSpace, w * 0.42f)
+                : (int) Math.min(w - 2f * pad, h * 0.38f - clockSpace);
         artSize = Math.max(artSize, dp(120));
         art.setLayoutParams(new LinearLayout.LayoutParams(artSize, artSize));
 
@@ -610,6 +629,7 @@ public class MainActivity extends Activity implements PlayerService.Listener, Li
             float cx = (art.getLeft() + art.getWidth() / 2f) / (float) Math.max(1, w);
             float cy = (art.getTop() + art.getHeight() / 2f) / (float) Math.max(1, h);
             glow.setCenter(cx, cy);
+            chrome.placeClockAbove(art, dp(4));
         });
         if (!libraryOpen) library.setTranslationX(-w);
     }
