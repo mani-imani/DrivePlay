@@ -37,6 +37,9 @@ GeekMusic replaces the head unit's stock music player with the same night-first 
 - Songs without art get unique generated artwork (same algorithm as GeekPlay)
 - **Repairs garbled Persian tags:** tags that show up as `ÓæÛÇÊí` instead of Persian are displayed correctly
 - Adaptive layout that scales to fit any screen
+- **Full-screen:** the head unit's top bar hides; swipe down or tap the top edge to show it for a few seconds
+- Clock above the cover
+- Controls on the left (driver's side), cover on the right
 
 | فارسی | English |
 |:---:|:---:|
