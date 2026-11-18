@@ -1,0 +1,48 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'ir.maniimani.geekmusic'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId 'ir.maniimani.geekmusic'
+        minSdk 26
+        targetSdk 28          // Android 9 — same as the head unit
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    // A fixed key committed to the repo, so every build (local or CI) is signed the
+    // same way and new versions install as updates over old ones. This is a personal
+    // sideloaded app, not a Play Store release key.
+    signingConfigs {
+        shared {
+            storeFile file('geekmusic.keystore')
+            storePassword 'android'
+            keyAlias 'geekmusic'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.shared
+        }
+        release {
+            signingConfig signingConfigs.shared
+            minifyEnabled false
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    lint {
+        abortOnError false
+        checkReleaseBuilds false
+    }
+}
